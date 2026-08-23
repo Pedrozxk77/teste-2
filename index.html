@@ -62,6 +62,79 @@
       z-index: 20;
     }
 
+    #destination-panel {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      width: min(340px, calc(100vw - 40px));
+      padding: 12px;
+      color: #fff;
+      background: rgba(8, 15, 18, 0.88);
+      border: 1px solid rgba(134, 239, 172, 0.55);
+      border-radius: 10px;
+      z-index: 15;
+    }
+
+    #destination-form {
+      display: flex;
+      gap: 8px;
+    }
+
+    #destination-input {
+      min-width: 0;
+      flex: 1;
+      padding: 10px;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 6px;
+    }
+
+    #destination-form button,
+    #clear-destination {
+      padding: 10px 12px;
+      color: #06230f;
+      background: #86efac;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    #clear-destination {
+      display: none;
+      width: 100%;
+      margin-top: 8px;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.14);
+    }
+
+    #destination-results {
+      display: grid;
+      gap: 4px;
+      margin-top: 8px;
+    }
+
+    .destination-result {
+      padding: 8px;
+      color: #fff;
+      text-align: left;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid transparent;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .destination-result:hover {
+      border-color: #86efac;
+    }
+
+    #destination-message {
+      display: block;
+      margin-top: 8px;
+      color: rgba(255, 255, 255, 0.72);
+      font-size: 12px;
+    }
+
     #settings-btn {
       position: fixed;
       bottom: 20px;
@@ -123,6 +196,16 @@
   <canvas id="overlay-canvas"></canvas>
 
   <div id="status" class="hidden"></div>
+
+  <section id="destination-panel" aria-label="Selecionar destino">
+    <form id="destination-form">
+      <input id="destination-input" type="search" placeholder="Para onde você quer ir?" autocomplete="off">
+      <button type="submit">Buscar</button>
+    </form>
+    <div id="destination-results"></div>
+    <span id="destination-message">Busque um endereço ou ponto de interesse.</span>
+    <button id="clear-destination" type="button">Limpar destino</button>
+  </section>
 
   <button id="start-btn">Ativar câmera</button>
 

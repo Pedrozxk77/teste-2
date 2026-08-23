@@ -15,6 +15,11 @@ const settingsBtn = document.getElementById('settings-btn');
 const settingsPanel = document.getElementById('settings-panel');
 const settingsList = document.getElementById('settings-list');
 const statusEl = document.getElementById('status');
+const destinationForm = document.getElementById('destination-form');
+const destinationInput = document.getElementById('destination-input');
+const destinationResults = document.getElementById('destination-results');
+const destinationMessage = document.getElementById('destination-message');
+const clearDestinationBtn = document.getElementById('clear-destination');
 
 const manager = new ModuleManager(video, canvas);
 
@@ -58,6 +63,50 @@ function renderSettingsList() {
     settingsList.appendChild(row);
   }
 }
+
+const gpsModule = manager.modules.get('gps-minimap');
+
+destinationForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const query = destinationInput.value.trim();
+  if (!query) return;
+
+  destinationResults.innerHTML = '';
+  destinationMessage.textContent = 'Buscando lugares...';
+
+  try {
+    const places = await gpsModule.searchPlaces(query);
+    if (!places.length) {
+      destinationMessage.textContent = 'Nenhum lugar encontrado.';
+      return;
+    }
+
+    destinationMessage.textContent = 'Selecione um resultado:';
+    for (const place of places) {
+      const resultBtn = document.createElement('button');
+      resultBtn.type = 'button';
+      resultBtn.className = 'destination-result';
+      resultBtn.textContent = place.display_name;
+      resultBtn.addEventListener('click', () => {
+        manager.toggle('gps-minimap', true);
+        gpsModule.setDestination(place);
+        destinationResults.innerHTML = '';
+        destinationMessage.textContent = `Destino: ${place.display_name}`;
+        clearDestinationBtn.style.display = 'block';
+      });
+      destinationResults.appendChild(resultBtn);
+    }
+  } catch (error) {
+    console.error('[destination] erro na busca:', error);
+    destinationMessage.textContent = 'Não foi possível buscar o lugar.';
+  }
+});
+
+clearDestinationBtn.addEventListener('click', () => {
+  gpsModule.clearDestination();
+  destinationMessage.textContent = 'Busque um endereço ou ponto de interesse.';
+  clearDestinationBtn.style.display = 'none';
+});
 
 // Sempre que um módulo for ligado/desligado (inclusive automaticamente, por erro),
 // a lista de configurações se atualiza sozinha.

@@ -1,12 +1,13 @@
 // modules/hand-tracking.js
 // Detecta a mão com MediaPipe e desenha uma silhueta preenchida no overlay.
 
-const FINGER_PATHS = [
-  [0, 1, 2, 3, 4],
-  [0, 5, 6, 7, 8],
-  [0, 9, 10, 11, 12],
-  [0, 13, 14, 15, 16],
-  [0, 17, 18, 19, 20],
+// Ordem do contorno externo: os vales entre os dedos ficam preservados.
+const HAND_CONTOUR = [
+  0, 1, 2, 3, 4,
+  8, 7, 6, 5,
+  12, 11, 10, 9,
+  16, 15, 14, 13,
+  20, 19, 18, 17,
 ];
 
 function isPalmFacingCamera(hand, minimumRatio) {
@@ -39,36 +40,30 @@ function drawSilhouette(ctx, hand, width, height, config) {
     x: hand[index].x * width,
     y: hand[index].y * height,
   });
-  const wrist = point(0);
-  const indexBase = point(5);
-  const pinkyBase = point(17);
-  const palmWidth = Math.hypot(indexBase.x - pinkyBase.x, indexBase.y - pinkyBase.y);
-
-  ctx.fillStyle = config.fillColor;
-  ctx.strokeStyle = config.fillColor;
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
+  const points = HAND_CONTOUR.map(point);
+  const first = points[0];
+  const second = points[1];
 
   ctx.beginPath();
-  ctx.moveTo(wrist.x, wrist.y);
-  ctx.lineTo(indexBase.x, indexBase.y);
-  ctx.lineTo(point(9).x, point(9).y);
-  ctx.lineTo(point(13).x, point(13).y);
-  ctx.lineTo(pinkyBase.x, pinkyBase.y);
-  ctx.closePath();
-  ctx.lineWidth = palmWidth * 0.72;
-  ctx.stroke();
-  ctx.fill();
-
-  for (const path of FINGER_PATHS) {
-    const points = path.map(point);
-    const fingerWidth = path[0] === 0 && path[1] === 1 ? palmWidth * 0.28 : palmWidth * 0.22;
-    ctx.beginPath();
-    ctx.moveTo(points[0].x, points[0].y);
-    for (const current of points.slice(1)) ctx.lineTo(current.x, current.y);
-    ctx.lineWidth = fingerWidth;
-    ctx.stroke();
+  ctx.moveTo((first.x + second.x) / 2, (first.y + second.y) / 2);
+  for (let index = 1; index <= points.length; index += 1) {
+    const current = points[index % points.length];
+    const next = points[(index + 1) % points.length];
+    ctx.quadraticCurveTo(
+      current.x,
+      current.y,
+      (current.x + next.x) / 2,
+      (current.y + next.y) / 2,
+    );
   }
+  ctx.closePath();
+  ctx.fillStyle = config.fillColor;
+  ctx.strokeStyle = config.outlineColor;
+  ctx.lineWidth = config.outlineWidth;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.fill();
+  ctx.stroke();
 }
 
 export function createHandTrackingModule(options = {}) {
@@ -79,6 +74,7 @@ export function createHandTrackingModule(options = {}) {
     minPalmFacingRatio: 0.55,
     fillColor: 'rgba(18, 13, 16, 0.9)',
     outlineColor: 'rgba(255, 255, 255, 0.85)',
+    outlineWidth: 4,
     ...options,
   };
   let hands = null;

@@ -1,13 +1,13 @@
 // modules/hand-tracking.js
-// Detecta a mão com MediaPipe e desenha o contorno em cinza no overlay.
+// Detecta a mão com MediaPipe e desenha o esqueleto padrão no overlay.
 
-// Ordem do contorno externo: os vales entre os dedos ficam preservados.
-const HAND_CONTOUR = [
-  0, 1, 2, 3, 4,
-  8, 7, 6, 5,
-  12, 11, 10, 9,
-  16, 15, 14, 13,
-  20, 19, 18, 17,
+const HAND_CONNECTIONS = [
+  [0, 1], [1, 2], [2, 3], [3, 4],
+  [0, 5], [5, 6], [6, 7], [7, 8],
+  [0, 9], [9, 10], [10, 11], [11, 12],
+  [0, 13], [13, 14], [14, 15], [15, 16],
+  [0, 17], [17, 18], [18, 19], [19, 20],
+  [5, 9], [9, 13], [13, 17],
 ];
 
 function drawHandLines(ctx, hand, width, height, config) {
@@ -16,18 +16,26 @@ function drawHandLines(ctx, hand, width, height, config) {
     y: hand[index].y * height,
   });
 
-  ctx.beginPath();
-  for (let index = 0; index < HAND_CONTOUR.length; index += 1) {
-    const current = point(HAND_CONTOUR[index]);
-    if (index === 0) ctx.moveTo(current.x, current.y);
-    else ctx.lineTo(current.x, current.y);
-  }
-  ctx.closePath();
   ctx.strokeStyle = config.outlineColor;
   ctx.lineWidth = config.outlineWidth;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
-  ctx.stroke();
+  for (const [startIndex, endIndex] of HAND_CONNECTIONS) {
+    const start = point(startIndex);
+    const end = point(endIndex);
+    ctx.beginPath();
+    ctx.moveTo(start.x, start.y);
+    ctx.lineTo(end.x, end.y);
+    ctx.stroke();
+  }
+
+  ctx.fillStyle = config.pointColor;
+  for (let index = 0; index < 21; index += 1) {
+    const current = point(index);
+    ctx.beginPath();
+    ctx.arc(current.x, current.y, config.pointRadius, 0, Math.PI * 2);
+    ctx.fill();
+  }
 }
 
 export function createHandTrackingModule(options = {}) {
@@ -36,7 +44,9 @@ export function createHandTrackingModule(options = {}) {
     minDetectionConfidence: 0.7,
     minTrackingConfidence: 0.65,
     outlineColor: 'rgba(180, 180, 180, 0.95)',
-    outlineWidth: 4,
+    pointColor: 'rgba(210, 210, 210, 0.95)',
+    outlineWidth: 2,
+    pointRadius: 3,
     ...options,
   };
   let hands = null;

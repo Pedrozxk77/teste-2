@@ -4,10 +4,11 @@
 // sem afetar os demais.
 
 export class ModuleManager {
-  constructor(videoEl, canvasEl, mapEl = null) {
+  constructor(videoEl, canvasEl, mapEl = null, overlayEl = null) {
     this.video = videoEl;
     this.canvas = canvasEl;
     this.map = mapEl;
+    this.overlay = overlayEl;
     this.ctx = canvasEl.getContext('2d');
     this.modules = new Map();
     this.running = false;
@@ -16,7 +17,13 @@ export class ModuleManager {
 
   // Contexto compartilhado que cada módulo recebe em init() e onFrame()
   getContext() {
-    return { video: this.video, canvas: this.canvas, ctx: this.ctx, map: this.map };
+    return {
+      video: this.video,
+      canvas: this.canvas,
+      ctx: this.ctx,
+      map: this.map,
+      overlay: this.overlay,
+    };
   }
 
   // Registra um novo módulo. O estado salvo no localStorage (se existir)

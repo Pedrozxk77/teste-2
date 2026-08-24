@@ -36,6 +36,117 @@
       pointer-events: none;
     }
 
+    #floating-layer {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      perspective: 1100px;
+      pointer-events: none;
+      z-index: 14;
+    }
+
+    .floating-toolbar {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      padding: 8px;
+      transform: translateX(-50%);
+      color: #fff;
+      background: rgba(12, 18, 24, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 10px;
+      pointer-events: auto;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    .floating-toolbar button,
+    .floating-window button {
+      padding: 7px 10px;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .floating-toolbar button:hover,
+    .floating-window button:hover {
+      background: rgba(255, 255, 255, 0.24);
+    }
+
+    .floating-window {
+      position: absolute;
+      min-width: 280px;
+      min-height: 190px;
+      width: 440px;
+      height: 310px;
+      overflow: hidden;
+      background: #111820;
+      border: 1px solid rgba(255, 255, 255, 0.42);
+      border-radius: 12px;
+      box-shadow: 0 20px 55px rgba(0, 0, 0, 0.62);
+      pointer-events: auto;
+      transform-style: preserve-3d;
+      transition: box-shadow 120ms ease;
+    }
+
+    .floating-window.is-dragging {
+      box-shadow: 0 28px 70px rgba(0, 0, 0, 0.75);
+    }
+
+    .floating-window__bar {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      height: 42px;
+      padding: 6px 8px;
+      color: #fff;
+      background: rgba(24, 34, 44, 0.98);
+      cursor: grab;
+      user-select: none;
+    }
+
+    .floating-window__bar:active {
+      cursor: grabbing;
+    }
+
+    .floating-window__url {
+      min-width: 0;
+      flex: 1;
+      padding: 7px 8px;
+      color: #fff;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 5px;
+    }
+
+    .floating-window__frame {
+      width: 100%;
+      height: calc(100% - 42px);
+      border: 0;
+      background: #fff;
+    }
+
+    .floating-window__resize {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      width: 20px;
+      height: 20px;
+      cursor: nwse-resize;
+    }
+
+    .floating-window__depth {
+      position: absolute;
+      right: 8px;
+      bottom: 8px;
+      width: 72px;
+      opacity: 0.75;
+    }
+
     #gps-map {
       position: fixed;
       right: 20px;
@@ -217,6 +328,7 @@
 
   <video id="camera-feed" autoplay playsinline muted></video>
   <canvas id="overlay-canvas"></canvas>
+  <div id="floating-layer" aria-label="Janelas flutuantes"></div>
   <div id="gps-map" aria-label="Minimapa GPS"></div>
 
   <div id="status" class="hidden"></div>

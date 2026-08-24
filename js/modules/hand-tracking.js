@@ -1,5 +1,5 @@
 // modules/hand-tracking.js
-// Detecta a mão com MediaPipe e desenha uma silhueta preenchida no overlay.
+// Detecta a mão com MediaPipe e desenha o contorno em cinza no overlay.
 
 // Ordem do contorno externo: os vales entre os dedos ficam preservados.
 const HAND_CONTOUR = [
@@ -10,59 +10,23 @@ const HAND_CONTOUR = [
   20, 19, 18, 17,
 ];
 
-function isPalmFacingCamera(hand, minimumRatio) {
-  const wrist = hand[0];
-  const indexBase = hand[5];
-  const pinkyBase = hand[17];
-  const firstVector = {
-    x: indexBase.x - wrist.x,
-    y: indexBase.y - wrist.y,
-    z: indexBase.z - wrist.z,
-  };
-  const secondVector = {
-    x: pinkyBase.x - wrist.x,
-    y: pinkyBase.y - wrist.y,
-    z: pinkyBase.z - wrist.z,
-  };
-  const projectedArea = Math.abs(firstVector.x * secondVector.y - firstVector.y * secondVector.x);
-  const normal = {
-    x: firstVector.y * secondVector.z - firstVector.z * secondVector.y,
-    y: firstVector.z * secondVector.x - firstVector.x * secondVector.z,
-    z: firstVector.x * secondVector.y - firstVector.y * secondVector.x,
-  };
-  const palmArea = Math.hypot(normal.x, normal.y, normal.z);
-
-  return palmArea > 0 && projectedArea / palmArea >= minimumRatio;
-}
-
-function drawSilhouette(ctx, hand, width, height, config) {
+function drawHandLines(ctx, hand, width, height, config) {
   const point = (index) => ({
     x: hand[index].x * width,
     y: hand[index].y * height,
   });
-  const points = HAND_CONTOUR.map(point);
-  const first = points[0];
-  const second = points[1];
 
   ctx.beginPath();
-  ctx.moveTo((first.x + second.x) / 2, (first.y + second.y) / 2);
-  for (let index = 1; index <= points.length; index += 1) {
-    const current = points[index % points.length];
-    const next = points[(index + 1) % points.length];
-    ctx.quadraticCurveTo(
-      current.x,
-      current.y,
-      (current.x + next.x) / 2,
-      (current.y + next.y) / 2,
-    );
+  for (let index = 0; index < HAND_CONTOUR.length; index += 1) {
+    const current = point(HAND_CONTOUR[index]);
+    if (index === 0) ctx.moveTo(current.x, current.y);
+    else ctx.lineTo(current.x, current.y);
   }
   ctx.closePath();
-  ctx.fillStyle = config.fillColor;
   ctx.strokeStyle = config.outlineColor;
   ctx.lineWidth = config.outlineWidth;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
-  ctx.fill();
   ctx.stroke();
 }
 
@@ -71,9 +35,7 @@ export function createHandTrackingModule(options = {}) {
     maxNumHands: 2,
     minDetectionConfidence: 0.7,
     minTrackingConfidence: 0.65,
-    minPalmFacingRatio: 0.55,
-    fillColor: 'rgba(18, 13, 16, 0.9)',
-    outlineColor: 'rgba(255, 255, 255, 0.85)',
+    outlineColor: 'rgba(180, 180, 180, 0.95)',
     outlineWidth: 4,
     ...options,
   };
@@ -132,10 +94,8 @@ export function createHandTrackingModule(options = {}) {
       silhouetteCtx.clearRect(0, 0, canvas.width, canvas.height);
       let hasVisibleHand = false;
       for (const hand of landmarks) {
-        if (isPalmFacingCamera(hand, config.minPalmFacingRatio)) {
-          drawSilhouette(silhouetteCtx, hand, canvas.width, canvas.height, config);
-          hasVisibleHand = true;
-        }
+        drawHandLines(silhouetteCtx, hand, canvas.width, canvas.height, config);
+        hasVisibleHand = true;
       }
 
       if (hasVisibleHand) {

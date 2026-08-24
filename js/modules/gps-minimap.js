@@ -40,12 +40,17 @@ export function createGpsMinimapModule(options = {}) {
   let destination = null;
   let route = null;
   let routeRequestId = 0;
+  let mapInstance = null;
+  let currentMarker = null;
+  let destinationMarker = null;
+  let routeLine = null;
 
   const onPosition = (nextPosition) => {
     position = nextPosition;
     positionError = null;
     trail = [...trail, nextPosition].slice(-40);
     updateRoute();
+    updateMap();
   };
 
   const onPositionError = (error) => {
@@ -67,12 +72,54 @@ export function createGpsMinimapModule(options = {}) {
       const response = await fetch(url);
       if (!response.ok) throw new Error(`OSRM respondeu ${response.status}`);
       const data = await response.json();
-      if (requestId === routeRequestId) route = data.routes?.[0] || null;
+      if (requestId === routeRequestId) {
+        route = data.routes?.[0] || null;
+        updateMap();
+      }
     } catch (error) {
       if (requestId === routeRequestId) {
         route = null;
+        updateMap();
         console.warn('[gps-minimap] não foi possível calcular a rota:', error);
       }
+    }
+  };
+
+  const updateMap = () => {
+    if (!mapInstance || !position) return;
+
+    const current = [position.coords.latitude, position.coords.longitude];
+    if (!currentMarker) {
+      currentMarker = window.L.circleMarker(current, {
+        radius: 8,
+        color: '#fff',
+        weight: 3,
+        fillColor: '#2563eb',
+        fillOpacity: 1,
+      }).addTo(mapInstance);
+    } else {
+      currentMarker.setLatLng(current);
+    }
+
+    if (destination) {
+      const target = [destination.latitude, destination.longitude];
+      if (!destinationMarker) {
+        destinationMarker = window.L.marker(target).addTo(mapInstance);
+      } else {
+        destinationMarker.setLatLng(target);
+      }
+    }
+
+    if (route?.geometry?.coordinates?.length) {
+      const points = route.geometry.coordinates.map(([longitude, latitude]) => [latitude, longitude]);
+      if (!routeLine) {
+        routeLine = window.L.polyline(points, { color: '#1976d2', weight: 6, opacity: 0.9 }).addTo(mapInstance);
+      } else {
+        routeLine.setLatLngs(points);
+      }
+      mapInstance.fitBounds(routeLine.getBounds(), { padding: [24, 24] });
+    } else if (!destination) {
+      mapInstance.setView(current, 16);
     }
   };
 
@@ -110,12 +157,21 @@ export function createGpsMinimapModule(options = {}) {
     label: 'GPS e minimapa',
     defaultEnabled: false,
 
-    async init() {
+    async init({ map }) {
       position = null;
       positionError = null;
       heading = null;
       trail = [];
       route = null;
+
+      if (map && window.L && !mapInstance) {
+        mapInstance = window.L.map(map, { zoomControl: true, attributionControl: true });
+        window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '&copy; OpenStreetMap contributors',
+        }).addTo(mapInstance);
+        map.classList.add('is-visible');
+      }
 
       if (navigator.geolocation) {
         watchId = navigator.geolocation.watchPosition(onPosition, onPositionError, {
@@ -128,6 +184,7 @@ export function createGpsMinimapModule(options = {}) {
       }
 
       await requestOrientationPermission();
+      updateMap();
     },
 
     async searchPlaces(query) {
@@ -166,6 +223,14 @@ export function createGpsMinimapModule(options = {}) {
       destination = null;
       route = null;
       routeRequestId += 1;
+      if (destinationMarker) {
+        destinationMarker.remove();
+        destinationMarker = null;
+      }
+      if (routeLine) {
+        routeLine.remove();
+        routeLine = null;
+      }
     },
 
     getDestination() {
@@ -173,6 +238,7 @@ export function createGpsMinimapModule(options = {}) {
     },
 
     onFrame({ canvas, ctx }) {
+      if (mapInstance) return;
       if (!canvas.width || !canvas.height) return;
 
       const size = Math.min(config.size, canvas.width - config.padding * 2);
@@ -304,6 +370,13 @@ export function createGpsMinimapModule(options = {}) {
       destination = null;
       route = null;
       routeRequestId += 1;
+      if (mapInstance) {
+        mapInstance.remove();
+        mapInstance = null;
+      }
+      currentMarker = null;
+      destinationMarker = null;
+      routeLine = null;
     },
   };
 }

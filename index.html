@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>AR Glasses - Base Modular</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <style>
     * {
       margin: 0;
@@ -33,6 +34,28 @@
       width: 100%;
       height: 100%;
       pointer-events: none;
+    }
+
+    #gps-map {
+      position: fixed;
+      right: 20px;
+      top: 20px;
+      width: min(300px, calc(100vw - 40px));
+      height: min(300px, 38vh);
+      overflow: hidden;
+      border: 3px solid rgba(255, 255, 255, 0.9);
+      border-radius: 14px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+      z-index: 12;
+      display: none;
+    }
+
+    #gps-map.is-visible {
+      display: block;
+    }
+
+    .leaflet-control-attribution {
+      font-size: 9px;
     }
 
     #status {
@@ -194,6 +217,7 @@
 
   <video id="camera-feed" autoplay playsinline muted></video>
   <canvas id="overlay-canvas"></canvas>
+  <div id="gps-map" aria-label="Minimapa GPS"></div>
 
   <div id="status" class="hidden"></div>
 
@@ -215,6 +239,9 @@
     <div id="settings-list"></div>
   </div>
 
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
   <script type="module" src="js/main.js"></script>
 
 </body>

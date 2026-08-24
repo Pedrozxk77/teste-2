@@ -10,6 +10,7 @@ import { floatingPanelsModule } from './modules/floating-panels.js';
 
 const video = document.getElementById('camera-feed');
 const canvas = document.getElementById('overlay-canvas');
+const map = document.getElementById('gps-map');
 const startBtn = document.getElementById('start-btn');
 const settingsBtn = document.getElementById('settings-btn');
 const settingsPanel = document.getElementById('settings-panel');
@@ -21,7 +22,7 @@ const destinationResults = document.getElementById('destination-results');
 const destinationMessage = document.getElementById('destination-message');
 const clearDestinationBtn = document.getElementById('clear-destination');
 
-const manager = new ModuleManager(video, canvas);
+const manager = new ModuleManager(video, canvas, map);
 
 // Ordem de registro: câmera primeiro (sempre ativa), depois os módulos opcionais.
 manager.register(cameraModule);
